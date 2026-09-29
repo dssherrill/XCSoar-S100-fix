@@ -316,7 +316,9 @@ DownloadFlightInner(Port &port, const char *filename, BufferedOutputStream &os,
     /* 50 lines causes problems when downloading from LXNav S100 vario because of it's small internal buffer. */
     /* 10 increased Nano download time by 50% (from 1:10 to 1:44) */
     /* Now trying 25 lines at a time */
-    unsigned nrequest = row_count == 0 ? 1 : 25;
+    /* Result: 1:17 for 25 lines */
+    /* Re-testing 50 lines */
+    unsigned nrequest = row_count == 0 ? 1 : 50;
     if (row_count > 0) {
       assert(i <= row_count);
       const unsigned remaining = row_count - i + 1;
