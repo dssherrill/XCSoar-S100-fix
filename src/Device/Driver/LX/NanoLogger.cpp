@@ -19,6 +19,8 @@
 #include "util/TextFile.hxx"
 #include "io/FileLineReader.hpp"
 #include "LogFile.hpp"
+#include "Profile/Keys.hpp"
+#include "Profile/ProfileMap.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -311,6 +313,14 @@ DownloadFlightInner(Port &port, const char *filename, BufferedOutputStream &os,
   unsigned bytes_written = 0;
   bool range_set = false;
 
+  /* chunk size is tunable via the profile file (key
+     "NanoFlightDownloadChunkSize") for testing, without needing a
+     rebuild; falls back to 50 if absent or out of range */
+  unsigned chunk_size = 50;
+  Profile::Get(ProfileKeys::NanoFlightDownloadChunkSize, chunk_size);
+  if (chunk_size < 1 || chunk_size > 500)
+    chunk_size = 50;
+
   while (true) {
     /* read up to 10 lines at a time */
     /* 50 lines causes problems when downloading from LXNav S100 vario because of it's small internal buffer. */
@@ -318,7 +328,7 @@ DownloadFlightInner(Port &port, const char *filename, BufferedOutputStream &os,
     /* Now trying 25 lines at a time */
     /* Result: 1:17 for 25 lines */
     /* Re-testing 50 lines */
-    unsigned nrequest = row_count == 0 ? 1 : 50;
+    unsigned nrequest = row_count == 0 ? 1 : chunk_size;
     if (row_count > 0) {
       assert(i <= row_count);
       const unsigned remaining = row_count - i + 1;

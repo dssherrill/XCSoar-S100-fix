@@ -354,6 +354,11 @@ constexpr std::string_view GDL90HorizontalRange = "GDL90HorizontalRange";
 constexpr std::string_view GDL90VerticalRange = "GDL90VerticalRange";
 constexpr std::string_view GDL90UseSystemUtcDate = "GDL90UseSystemUtcDate";
 
+/* not exposed in the configuration UI; edit the profile file directly
+   to tune the LX Nano/S100 flight download chunk size for testing */
+constexpr std::string_view NanoFlightDownloadChunkSize =
+  "NanoFlightDownloadChunkSize";
+
 constexpr std::string_view HideQuickGuideDialogOnStartup =
   "HideQuickGuideDialogOnStartup";
 constexpr std::string_view DisclaimerAcknowledgedVersion =
