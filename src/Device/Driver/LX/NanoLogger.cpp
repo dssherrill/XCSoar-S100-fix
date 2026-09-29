@@ -312,8 +312,10 @@ DownloadFlightInner(Port &port, const char *filename, BufferedOutputStream &os,
   bool range_set = false;
 
   while (true) {
-    /* read up to 50 lines at a time */
-    unsigned nrequest = row_count == 0 ? 1 : 50;
+    /* read up to 10 lines at a time */
+    /* 50 lines causes problems when downloading from LXNav S100 vario because of it's small internal buffer. */
+    /* 10 seems to have no performance degradation. */
+    unsigned nrequest = row_count == 0 ? 1 : 10;
     if (row_count > 0) {
       assert(i <= row_count);
       const unsigned remaining = row_count - i + 1;
