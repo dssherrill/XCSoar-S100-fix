@@ -265,16 +265,25 @@ LXDevice::DownloadFlight(const RecordedFlightInfo &flight,
     busy = true;
     AtScopeExit(this) { busy = false; };
 
-    bool restore_nmea = false;
+    bool restore_vario_nmea = false;
+    std::string saved_nano_nmearate;
     AtScopeExit(&) {
-      if (!restore_nmea)
-        return;
+      if (restore_vario_nmea) {
+        try {
+          LXNAVVario::SetupNMEA(port, env);
+        } catch (...) {
+          LogError(std::current_exception(),
+                   "LXNAV: failed to restore NMEA rates after flight download");
+        }
+      }
 
-      try {
-        LXNAVVario::SetupNMEA(port, env);
-      } catch (...) {
-        LogError(std::current_exception(),
-                 "LXNAV: failed to restore NMEA rates after flight download");
+      if (!saved_nano_nmearate.empty()) {
+        try {
+          SendNanoSetting("NMEARATE", saved_nano_nmearate.c_str(), env);
+        } catch (...) {
+          LogError(std::current_exception(),
+                   "LXNAV: failed to restore Nano NMEA rate after flight download");
+        }
       }
     };
 
@@ -283,7 +292,17 @@ LXDevice::DownloadFlight(const RecordedFlightInfo &flight,
          be written into the middle of a line.  GPS sentences are not
          part of NMEARATE and keep the port alive. */
       LXNAVVario::SilenceNMEA(port, env);
-      restore_nmea = true;
+      restore_vario_nmea = true;
+    } else if (IsNano() && RequestNanoSetting("NMEARATE", env)) {
+      /* the standalone Nano also broadcasts its own periodic GPS
+         sentences, which compete with the flight rows on the same
+         port; save the current rate so it can be restored verbatim,
+         since its value encoding is otherwise undocumented */
+      const auto value = WaitNanoSetting("NMEARATE", env, 500);
+      if (!value.empty()) {
+        SendNanoSetting("NMEARATE", "0", env);
+        saved_nano_nmearate = value;
+      }
     }
 
     return Nano::DownloadFlight(port, flight, path, env);
