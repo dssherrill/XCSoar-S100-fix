@@ -226,8 +226,7 @@ Version 7.46 - not yet released
     LX7007 IGC) showing about 65000 m for negative pressure
     altitudes #3075
   - fix LXNAV S-series flight download aborting after valid rows when
-    the same 50-line block had already used its retries, and pause
-    periodic vario sentences during the download #3201
+    the same 50-line block had already used its retries #3201
   - wait for the LXNAV product reply before choosing a flight-list
     protocol, so an S-series logger is not sent Colibri commands
     while it is still identifying
