@@ -3,6 +3,7 @@
 
 #include "Internal.hpp"
 #include "NanoLogger.hpp"
+#include "LogFile.hpp"
 #include "Protocol.hpp"
 #include "Convert.hpp"
 #include "Device/Error.hpp"
@@ -262,6 +263,35 @@ LXDevice::DownloadFlight(const RecordedFlightInfo &flight,
     assert(!busy);
     busy = true;
     AtScopeExit(this) { busy = false; };
+
+    bool restore_nmea = false;
+    AtScopeExit(&) {
+      if (!restore_nmea)
+        return;
+
+      try {
+        SendNanoSetting("NMEA", 1u, env);
+      } catch (...) {
+        LogError(std::current_exception(),
+                 "LXNAV: failed to re-enable NMEA after flight download");
+      }
+    };
+
+    if (IsLXNAVVario() || IsNano()) {
+      /**
+       * The logger keeps streaming its own PLXVF/LXWP* sentences
+       * and the GPS sentences (GPRMC/GPGGA) on the same link while
+       * flight rows are read, and firmware can splice one of them
+       * into the middle of a row (#3201).  A bare Nano exhibits the
+       * same fault as a V7/S-series vario.  NMEARATE only silences
+       * the vario's own sentences, not the GPS ones, so turn NMEA
+       * output off completely instead and wait for the logger to
+       * confirm it before downloading.
+       */
+      SendNanoSetting("NMEA", 0u, env);
+      WaitNanoSetting("NMEA", env, 2000);
+      restore_nmea = true;
+    }
 
     return Nano::DownloadFlight(port, flight, path, env);
   }

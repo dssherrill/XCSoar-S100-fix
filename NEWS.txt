@@ -227,6 +227,10 @@ Version 7.46 - not yet released
     altitudes #3075
   - fix LXNAV S-series flight download aborting after valid rows when
     the same 50-line block had already used its retries #3201
+  - turn NMEA output off completely on a LXNAV Nano, V7, or
+    S-series vario during a flight download, instead of only
+    reducing the vario's own sentence rates, because the GPS
+    sentences kept colliding with the flight rows #3201
   - wait for the LXNAV product reply before choosing a flight-list
     protocol, so an S-series logger is not sent Colibri commands
     while it is still identifying
